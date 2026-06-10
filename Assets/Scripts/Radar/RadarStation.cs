@@ -3,7 +3,8 @@ using UnityEngine;
 
 public class RadarStation : MonoBehaviour
 {
-    [Header("Radar Settings")]
+    [Header("Visuals")]
+    public Transform radarRangeVisual;
     public float detectionRange = 4f;
     public float noiseLevel = 0.2f;
     public float scanInterval = 1f;
@@ -30,6 +31,24 @@ public class RadarStation : MonoBehaviour
         }
     }
 
+    private void UpdateRadarVisual()
+    {
+        if (radarRangeVisual == null)
+            return;
+
+        float diameter = detectionRange * 2f;
+
+        radarRangeVisual.localScale = new Vector3(
+            diameter,
+            diameter,
+            1f
+        );
+        Debug.Log($"Range visual scale set to {radarRangeVisual.localScale}");
+    }
+    private void LateUpdate()
+    {
+        UpdateRadarVisual();
+    }
     private void ScanTargets()
     {
         detectedTargets.Clear();
