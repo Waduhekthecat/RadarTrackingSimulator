@@ -13,9 +13,11 @@ public class RadarStation : MonoBehaviour
 
     [Header("Runtime State")]
     public List<TrackableObject> detectedTargets = new();
+    public List<RadarTrack> activeTracks = new();
 
     private SimulationController simulationController;
     private float scanTimer;
+    private int nextTrackId = 1;
 
     private void Start()
     {
@@ -62,6 +64,8 @@ public class RadarStation : MonoBehaviour
             if (detected)
             {
                 detectedTargets.Add(target);
+
+                CreateOrUpdateTrack(target);
             }
 
             bool inRange = distance <= detectionRange;
@@ -98,6 +102,35 @@ public class RadarStation : MonoBehaviour
             diameter,
             1f
         );
+    }
+    private void CreateOrUpdateTrack(TrackableObject target)
+    {
+        RadarTrack existingTrack =
+            activeTracks.Find(t => t.target == target);
+
+        if (existingTrack != null)
+        {
+            existingTrack.lastKnownPosition =
+                target.transform.position;
+
+            existingTrack.lastDetectionTime =
+                Time.time;
+
+            return;
+        }
+
+        RadarTrack newTrack = new RadarTrack
+        {
+            trackId = nextTrackId++,
+            target = target,
+            lastKnownPosition = target.transform.position,
+            lastDetectionTime = Time.time,
+            isActive = true
+        };
+
+        activeTracks.Add(newTrack);
+
+        Debug.Log($"Created Track #{newTrack.trackId} for {target.name}");
     }
 }
 
