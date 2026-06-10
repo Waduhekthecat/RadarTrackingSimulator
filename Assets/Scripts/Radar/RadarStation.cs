@@ -6,11 +6,12 @@ public class RadarStation : MonoBehaviour
     [Header("Visuals")]
     public RadarRangeVisual radarRangeVisual;
 
-    [Header("Radar Settings")]
-    public float detectionRange = 4f;
-    public float noiseLevel = 0.2f;
-    public float scanInterval = 0.25f;
-    public float trackTimeout = 5f;
+    [Header("Runtime Radar Settings")]
+    public float detectionRange;
+    public float noiseLevel;
+    public float scanInterval;
+    public float trackTimeout;
+    public float radarStrength;
 
     [Header("Runtime State")]
     public List<TrackableObject> detectedTargets = new();
@@ -23,6 +24,8 @@ public class RadarStation : MonoBehaviour
     private void Start()
     {
         simulationController = FindAnyObjectByType<SimulationController>();
+
+        ApplySimulationConfig();
         UpdateRadarVisual();
     }
 
@@ -43,6 +46,19 @@ public class RadarStation : MonoBehaviour
         UpdateRadarVisual();
     }
 
+    private void ApplySimulationConfig()
+    {
+        detectionRange = SimulationConfig.detectionRange;
+        noiseLevel = SimulationConfig.noiseLevel;
+        scanInterval = SimulationConfig.scanInterval;
+        trackTimeout = SimulationConfig.trackTimeout;
+        radarStrength = SimulationConfig.radarStrength;
+
+        Debug.Log(
+            $"Radar Config Applied | Range: {detectionRange} | Strength: {radarStrength} | Noise: {noiseLevel} | Scan Interval: {scanInterval} | Track Timeout: {trackTimeout}"
+        );
+    }
+
     private void ScanTargets()
     {
         if (simulationController == null)
@@ -60,7 +76,8 @@ public class RadarStation : MonoBehaviour
                 target.transform.position
             );
 
-            float probability = CalculateDetectionProbability(target, distance);
+            float probability =
+                CalculateDetectionProbability(target, distance);
 
             bool detected = Random.value <= probability;
 
@@ -71,6 +88,10 @@ public class RadarStation : MonoBehaviour
                 detectedTargets.Add(target);
                 CreateOrUpdateTrack(target);
             }
+            else
+            {
+                RegisterMissedDetection(target);
+            }
 
             bool inRange = distance <= detectionRange;
 
@@ -80,15 +101,20 @@ public class RadarStation : MonoBehaviour
         }
     }
 
-    private float CalculateDetectionProbability(TrackableObject target, float distance)
+    private float CalculateDetectionProbability(
+        TrackableObject target,
+        float distance)
     {
         if (distance > detectionRange)
             return 0f;
 
-        float distanceFactor = 1f - (distance / detectionRange);
+        float distanceFactor =
+            1f - (distance / detectionRange);
 
         float detectionProbability =
-            target.signatureStrength * distanceFactor;
+            target.signatureStrength *
+            distanceFactor *
+            radarStrength;
 
         detectionProbability -= noiseLevel * 0.5f;
 
@@ -111,7 +137,20 @@ public class RadarStation : MonoBehaviour
 
         activeTracks.Add(newTrack);
 
-        Debug.Log($"Created Track #{newTrack.trackId} for {target.name}");
+        Debug.Log(
+            $"Created Track #{newTrack.trackId} for {target.name}"
+        );
+    }
+
+    private void RegisterMissedDetection(TrackableObject target)
+    {
+        RadarTrack existingTrack =
+            activeTracks.Find(t => t.target == target);
+
+        if (existingTrack == null)
+            return;
+
+        existingTrack.RegisterMissedDetection();
     }
 
     private void RemoveStaleTracks()
@@ -121,13 +160,15 @@ public class RadarStation : MonoBehaviour
             RadarTrack track = activeTracks[i];
 
             bool targetDestroyed = track.target == null;
+
             bool trackExpired =
-                Time.time - track.lastDetectionTime > trackTimeout;
+                Time.time - track.lastDetectionTime >
+                trackTimeout;
 
             if (targetDestroyed || trackExpired)
             {
                 Debug.Log(
-                    $"Removed Track #{track.trackId} | Target: {(track.target != null ? track.target.name : "Destroyed")} | Reason: {(targetDestroyed ? "Target Destroyed" : "Track Timeout")}"
+                    $"Removed Track #{track.trackId} | Target: {(track.target != null ? track.target.name : "Destroyed")} | State: {track.state} | Reason: {(targetDestroyed ? "Target Destroyed" : "Track Timeout")}"
                 );
 
                 activeTracks.RemoveAt(i);
@@ -143,5 +184,3 @@ public class RadarStation : MonoBehaviour
         radarRangeVisual.SetRange(detectionRange);
     }
 }
-
-// TODO: Fix probability ceiling once architecture is validated.
