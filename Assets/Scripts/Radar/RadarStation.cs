@@ -4,12 +4,13 @@ using UnityEngine;
 public class RadarStation : MonoBehaviour
 {
     [Header("Visuals")]
-    public Transform radarRangeVisual;
+    public RadarRangeVisual radarRangeVisual;
 
     [Header("Radar Settings")]
     public float detectionRange = 4f;
     public float noiseLevel = 0.2f;
     public float scanInterval = 0.25f;
+    public float trackTimeout = 5f;
 
     [Header("Runtime State")]
     public List<TrackableObject> detectedTargets = new();
@@ -33,6 +34,7 @@ public class RadarStation : MonoBehaviour
         {
             scanTimer = 0f;
             ScanTargets();
+            RemoveStaleTracks();
         }
     }
 
@@ -50,6 +52,9 @@ public class RadarStation : MonoBehaviour
 
         foreach (TrackableObject target in simulationController.ActiveTargets)
         {
+            if (target == null)
+                continue;
+
             float distance = Vector3.Distance(
                 transform.position,
                 target.transform.position
@@ -64,7 +69,6 @@ public class RadarStation : MonoBehaviour
             if (detected)
             {
                 detectedTargets.Add(target);
-
                 CreateOrUpdateTrack(target);
             }
 
@@ -83,26 +87,14 @@ public class RadarStation : MonoBehaviour
 
         float distanceFactor = 1f - (distance / detectionRange);
 
-        float detectionProbability = target.signatureStrength * distanceFactor;
+        float detectionProbability =
+            target.signatureStrength * distanceFactor;
 
         detectionProbability -= noiseLevel * 0.5f;
 
         return Mathf.Clamp01(detectionProbability);
     }
 
-    private void UpdateRadarVisual()
-    {
-        if (radarRangeVisual == null)
-            return;
-
-        float diameter = detectionRange * 2.15f;
-
-        radarRangeVisual.localScale = new Vector3(
-            diameter,
-            diameter,
-            1f
-        );
-    }
     private void CreateOrUpdateTrack(TrackableObject target)
     {
         RadarTrack existingTrack =
@@ -110,28 +102,46 @@ public class RadarStation : MonoBehaviour
 
         if (existingTrack != null)
         {
-            existingTrack.lastKnownPosition =
-                target.transform.position;
-
-            existingTrack.lastDetectionTime =
-                Time.time;
-
+            existingTrack.UpdateTrack();
             return;
         }
 
-        RadarTrack newTrack = new RadarTrack
-        {
-            trackId = nextTrackId++,
-            target = target,
-            lastKnownPosition = target.transform.position,
-            lastDetectionTime = Time.time,
-            isActive = true
-        };
+        RadarTrack newTrack =
+            new RadarTrack(nextTrackId++, target);
 
         activeTracks.Add(newTrack);
 
         Debug.Log($"Created Track #{newTrack.trackId} for {target.name}");
     }
+
+    private void RemoveStaleTracks()
+    {
+        for (int i = activeTracks.Count - 1; i >= 0; i--)
+        {
+            RadarTrack track = activeTracks[i];
+
+            bool targetDestroyed = track.target == null;
+            bool trackExpired =
+                Time.time - track.lastDetectionTime > trackTimeout;
+
+            if (targetDestroyed || trackExpired)
+            {
+                Debug.Log(
+                    $"Removed Track #{track.trackId} | Target: {(track.target != null ? track.target.name : "Destroyed")} | Reason: {(targetDestroyed ? "Target Destroyed" : "Track Timeout")}"
+                );
+
+                activeTracks.RemoveAt(i);
+            }
+        }
+    }
+
+    private void UpdateRadarVisual()
+    {
+        if (radarRangeVisual == null)
+            return;
+
+        radarRangeVisual.SetRange(detectionRange);
+    }
 }
 
-// fix probability ceiling once architecture validated
+// TODO: Fix probability ceiling once architecture is validated.

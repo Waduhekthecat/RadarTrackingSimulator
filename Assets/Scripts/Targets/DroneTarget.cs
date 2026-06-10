@@ -6,8 +6,9 @@ public class DroneTarget : TrackableObject
     {
         base.Start();
 
-        speed = 0.35f;
-        signatureStrength = 0.3f;
+        speed = 0.28f;
+        signatureStrength = 0.25f;
+        transform.localScale = new Vector3(0.12f, 0.12f, 1f);
     }
 
     private void Update()

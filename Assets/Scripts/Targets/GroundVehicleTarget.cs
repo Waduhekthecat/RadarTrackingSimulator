@@ -6,8 +6,9 @@ public class GroundVehicleTarget : TrackableObject
     {
         base.Start();
 
-        speed = 0.15f;
-        signatureStrength = 0.5f;
+        speed = 0.12f;
+        signatureStrength = 0.55f;
+        transform.localScale = new Vector3(0.2f, 0.2f, 1f);
     }
 
     private void Update()
