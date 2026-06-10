@@ -11,7 +11,13 @@ public class RadarStation : MonoBehaviour
     [Header("Runtime State")]
     public List<TrackableObject> detectedTargets = new();
 
+    private SimulationController simulationController;
     private float scanTimer;
+
+    private void Start()
+    {
+        simulationController = FindAnyObjectByType<SimulationController>();
+    }
 
     private void Update()
     {
@@ -20,8 +26,19 @@ public class RadarStation : MonoBehaviour
         if (scanTimer >= scanInterval)
         {
             scanTimer = 0f;
-            // scan logic will go here 
-            Debug.Log("Radar scan executed.");
+            ScanTargets();
+        }
+    }
+
+    private void ScanTargets()
+    {
+        detectedTargets.Clear();
+
+        foreach (TrackableObject target in simulationController.ActiveTargets)
+        {
+            float distance = Vector3.Distance(transform.position, target.transform.position);
+
+            Debug.Log($"Scanned {target.name}. Distance: {distance:F2}");
         }
     }
 }

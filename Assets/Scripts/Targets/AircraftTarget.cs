@@ -2,8 +2,10 @@ using UnityEngine;
 
 public class AircraftTarget : TrackableObject
 {
-    private void Start()
+    protected override void Start()
     {
+        base.Start();
+
         speed = 1.5f;
         signatureStrength = 0.9f;
     }

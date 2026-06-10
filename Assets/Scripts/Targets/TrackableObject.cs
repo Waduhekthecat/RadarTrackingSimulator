@@ -3,10 +3,29 @@ using UnityEngine;
 public abstract class TrackableObject : MonoBehaviour
 {
     [Header("Target Data")]
+    private SimulationController simulationController;
     public float speed;
     public float headingDegrees;
     public float signatureStrength;
     public bool isDetected;
+
+    protected virtual void Start()
+    {
+        simulationController = FindAnyObjectByType<SimulationController>();
+
+        if (simulationController != null)
+        {
+            simulationController.RegisterTarget(this);
+        }
+    }
+
+    protected virtual void OnDestroy()
+    {
+        if (simulationController != null)
+        {
+            simulationController.UnregisterTarget(this);
+        }
+    }
 
     public virtual void UpdateMovement(float deltaTime)
     {
