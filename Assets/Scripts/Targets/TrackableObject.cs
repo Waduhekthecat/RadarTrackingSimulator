@@ -4,6 +4,7 @@ public abstract class TrackableObject : MonoBehaviour
 {
     [Header("Target Data")]
     private SimulationController simulationController;
+    private SpriteRenderer spriteRenderer;
     public float speed;
     public float headingDegrees;
     public float signatureStrength;
@@ -11,6 +12,8 @@ public abstract class TrackableObject : MonoBehaviour
 
     protected virtual void Start()
     {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+
         simulationController = FindAnyObjectByType<SimulationController>();
 
         if (simulationController != null)
@@ -38,5 +41,17 @@ public abstract class TrackableObject : MonoBehaviour
     public virtual void SetDetected(bool detected)
     {
         isDetected = detected;
+
+        if (spriteRenderer == null)
+            return;
+
+        if (isDetected)
+        {
+            spriteRenderer.color = Color.green;
+        }
+        else
+        {
+            spriteRenderer.color = Color.red;
+        }
     }
 }

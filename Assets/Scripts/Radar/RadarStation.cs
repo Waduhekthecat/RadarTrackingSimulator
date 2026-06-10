@@ -46,8 +46,10 @@ public class RadarStation : MonoBehaviour
             {
                 detectedTargets.Add(target);
             }
-
-            Debug.Log($"{target.name} | Distance: {distance:F2} | Detected: {detected}");
+            Debug.Log(
+    $"Distance: {distance:F2}, Range: {detectionRange:F2}"
+);
+            // Debug.Log($"{target.name} | Distance: {distance:F2} | Detected: {detected}");
         }
     }
 }
