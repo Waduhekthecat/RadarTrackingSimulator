@@ -31,7 +31,7 @@ public class TargetSpawner : MonoBehaviour
             );
 
             GameObject target = Instantiate(prefab, spawnPosition, Quaternion.identity, targetParent);
-
+            target.name = $"{prefab.name}_{i + 1}";
             TrackableObject trackable = target.GetComponent<TrackableObject>();
 
             if (trackable != null)
