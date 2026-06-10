@@ -8,7 +8,6 @@ The Radar Tracking Simulator models a radar station operating within a two-dimen
 
 Detailed design specifications, requirements, architecture diagrams, pseudocode, and test cases can be found in:
 
-📄 [Radar Software Requirements & Design Specification](./Docs/RadarSimulator.docx)
 
 ![Radar Simulator Demo](Assets/DemoLoop.gif)
 
