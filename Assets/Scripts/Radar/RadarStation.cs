@@ -38,7 +38,16 @@ public class RadarStation : MonoBehaviour
         {
             float distance = Vector3.Distance(transform.position, target.transform.position);
 
-            Debug.Log($"Scanned {target.name}. Distance: {distance:F2}");
+            bool detected = distance <= detectionRange;
+
+            target.SetDetected(detected);
+
+            if (detected)
+            {
+                detectedTargets.Add(target);
+            }
+
+            Debug.Log($"{target.name} | Distance: {distance:F2} | Detected: {detected}");
         }
     }
 }
