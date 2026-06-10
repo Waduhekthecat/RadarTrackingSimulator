@@ -10,6 +10,8 @@ Detailed design specifications, requirements, architecture diagrams, pseudocode,
 
 📄 [Radar Software Requirements & Design Specification](./Docs/RadarSimulator.docx)
 
+![Radar Simulator Demo](Assets/DemoLoop.gif)
+
 ---
 
 ## Overview
